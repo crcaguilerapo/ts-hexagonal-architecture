@@ -1,0 +1,46 @@
+version: 2.1
+
+orbs:
+  node: circleci/node@5.1.0
+
+jobs:
+  build:
+    docker:
+      - image: cimg/node:24.0
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: npm
+      - run:
+          name: Build TypeScript Project
+          command: npm run build
+      - persist_to_workspace:
+          root: .
+          paths:
+            - node_modules
+            - dist
+            - package.json
+            - package-lock.json
+            - tsconfig.json
+            - jest.config.js
+            - tests
+            - src
+
+  test:
+    docker:
+      - image: cimg/node:24.0
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run:
+          name: Run Unit Tests
+          command: npm run test
+
+workflows:
+  build-and-test:
+    jobs:
+      - build
+      - test:
+          requires:
+            - build
